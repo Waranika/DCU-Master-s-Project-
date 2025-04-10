@@ -1,0 +1,64 @@
+import os
+import numpy as np
+import cv2
+from skimage import img_as_ubyte, io, color
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from CDD import *
+
+# Function to generate a mask with a small square in the middle
+def generate_square_mask(image, square_size=50):
+    # Calculate the coordinates for the center of the image
+    center_x, center_y = image.shape[1] // 2, image.shape[0] // 2
+    half_size = square_size // 2
+    # Create a mask with a square in the middle
+    mask = np.zeros(image.shape, dtype=bool)
+    mask[center_y - half_size:center_y + half_size, center_x - half_size:center_x + half_size] = True
+    return mask
+
+# Function to save images to a folder
+def save_image(image, tau_value, folder_path):
+    # Create the folder if it does not exist
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    # Generate the filename based on tau value
+    filename = f"inpainted_image_tau_{tau_value:.3f}.png"
+    file_path = os.path.join(folder_path, filename)
+    # Save the image
+    io.imsave(file_path, image)
+    print(f"Saved image: {file_path}")
+
+# Parameters
+tau_values = np.linspace(0.01, 0.5, 50)  # 50 values between 0.01 and 0.5
+
+# Load the images
+original = io.imread(r"C:\Users\kizer\Master_code\input_0_zoom.png")
+gray_image = color.rgb2gray(original)
+
+# Generate a mask with a small square in the middle
+mask = generate_square_mask(gray_image, square_size=50)
+
+# Apply the mask to the grayscale image (set masked areas to 0)
+masked_image = np.copy(gray_image)
+masked_image[mask] = 0
+
+# Folder to save the output images
+output_folder = r"C:\Users\kizer\Master_code\output_images"
+
+# Set up progress bar for tau iterations
+for tau in tqdm(tau_values, desc='Tau Iterations'):
+    # Define the g function based on curvature 
+    p = 1  
+    g = lambda s: s**p
+
+    # Inpaint the image
+    inpainted_image = cdd_inpainting(masked_image, mask, g, iterations=2500, tau=tau)
+
+    # Normalize the inpainted image to the range [0, 1]
+    inpainted_image_normalized = (inpainted_image - np.min(inpainted_image)) / (np.max(inpainted_image) - np.min(inpainted_image))
+
+    # Convert the inpainted image back to uint8 format for saving
+    inpainted_image_uint8 = img_as_ubyte(inpainted_image_normalized)
+
+    # Save the inpainted image
+    save_image(inpainted_image_uint8, tau, output_folder)
