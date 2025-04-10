@@ -1,4 +1,6 @@
 # Master's Project Repository
+![image](https://github.com/user-attachments/assets/0a1690d7-3197-4d05-bd9f-3ef09538e503)
+
 
 ## Description
 This repository contains Python scripts for various image inpainting techniques implemented as part of my Master's project. The implemented techniques include Curvature-Driven Diffusions (CDD), Nonlinear Diffusion Filter (NDF), Total Variation (TV) inpainting, and optimization scripts for tuning parameters.
